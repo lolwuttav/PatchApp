@@ -1,5 +1,6 @@
 package util;
 
+
 import java.io.*;
 import java.util.*;
 
@@ -59,7 +60,7 @@ public class FileUtil {
             System.out.println(new Date().toString() + " Patch file saved to " + file1 + PATCH_FILE_EXTENSION);
 
 
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -237,6 +238,11 @@ public class FileUtil {
         }
         return sb.toString();
     }
+
+
+
+
+
 
 
 
