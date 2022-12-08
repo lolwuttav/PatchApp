@@ -5,8 +5,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
-import static util.FileUtil.applyPatchToFile;
-import static util.FileUtil.generatePatchFile;
 
 public class PatchApp {
 
@@ -20,6 +18,8 @@ public class PatchApp {
 
     private static int mode = 0;
     public static void main(String[] args) {
+
+
 
 
 
@@ -50,25 +50,38 @@ public class PatchApp {
             }
 
             if(mode == 1) {
-    if(FILE1.equals("")) {
+                if (FILE1.equals("")) {
                     System.out.print("Enter the first file: ");
                     FILE1 = file1Scanner.nextLine();
                 }
-                if(FILE2.equals("")) {
+                if (FILE2.equals("")) {
                     System.out.print("Enter the second file: ");
                     FILE2 = file2Scanner.nextLine();
                 }
 
 
-                generatePatchFile(FILE1, FILE2);
+                FileUtil.generatePatchFile(FILE1, FILE2);
             }
+
+
+
             else if(mode == 2) {
                 if(FILE1.equals("")) {
                     System.out.print("Enter the first file: ");
                     FILE1 = file1Scanner.nextLine();
                 }
 
-                applyPatchToFile(FILE1, FILE1 + FileUtil.PATCH_FILE_EXTENSION);
+                FileUtil.applyPatchToFile(FILE1, FILE1 + FileUtil.PATCH_FILE_EXTENSION);
+
+
+                }
+
+            else if(mode == 3) {
+                System.out.println("Exiting...");
+                break;
+            }
+            else {
+                System.out.println("Invalid mode selected.");
             }
 
             if(argsPresent) {

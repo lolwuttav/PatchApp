@@ -3,6 +3,10 @@ package util;
 
 import java.io.*;
 import java.util.*;
+import java.util.zip.Deflater;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.Inflater;
+import java.util.zip.InflaterInputStream;
 
 public class FileUtil {
 
@@ -10,17 +14,27 @@ public class FileUtil {
     private static String MD51;
     private static String MD52;
 
+    private static Timer timer = new Timer();
+    private static Timer timer2 = new Timer();
+
     public static void applyPatchToFile(String file1, String file2) {
 
-        Map<Integer, Integer> patch = readMapFromFile(file2);
+        Map<Integer, Integer> patch = decompressMap(file2);
 
         List<Integer> file = readBytesFromFile(file1);
 
+        timer.start("Getting MD5 of files");
         MD51 = MD5.getFileMD5Checksum(file1);
         MD52 = MD5.getFileMD5Checksum(file2);
+        timer.stop();
 
         try {
-            applyPatchToList(file, patch);
+            timer.start("Applying patch to data");
+            if(!applyPatchToList(file, patch)){
+                System.out.println("Error applying patch, aborting");
+                return;
+            }
+            timer.stop();
         } catch (NullPointerException e) {
             System.out.println("Patch failed, aborting");
             System.out.println(e.getStackTrace().toString());
@@ -30,7 +44,9 @@ public class FileUtil {
         String[] parts = file1.split("\\.");
         String part1 = parts[0];
         String part2 = parts[1];
+        timer.start("Writing patched file");
         writeListToFile(file, part1 + "-patched" + "." + part2);
+        timer.stop();
     }
 
 
@@ -40,8 +56,10 @@ public class FileUtil {
             FileInputStream fis1 = new FileInputStream(file1);
             FileInputStream fis2 = new FileInputStream(file2);
 
+            timer.start("Getting MD5 of files");
             MD51 = MD5.getFileMD5Checksum(file1);
             MD52 = MD5.getFileMD5Checksum(file2);
+            timer.stop();
 
             // Get the MD5 checksums
             if(MD51.equals(MD52)) {
@@ -49,16 +67,23 @@ public class FileUtil {
                 return;
             }
 
+
+            timer.start("Reading files into memory");
             List<Integer> bytes1 = readBytesFromFile(file1);
             List<Integer> bytes2 = readBytesFromFile(file2);
+            timer.stop();
 
 
+            timer.start("Generating patch");
             Map<Integer, Integer> differentBytes = compareLists(bytes1, bytes2);
-
+            timer.stop();
             //Save the different bytes map to a file
-            writeMapToFile(differentBytes, file1 + PATCH_FILE_EXTENSION);
-            System.out.println(new Date().toString() + " Patch file saved to " + file1 + PATCH_FILE_EXTENSION);
+            //writeMapToFile(differentBytes, file1 + PATCH_FILE_EXTENSION);
+            timer.start("Saving patch to file");
 
+
+            compressMap(differentBytes, file1 + PATCH_FILE_EXTENSION);
+            timer.stop();
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -70,6 +95,9 @@ public class FileUtil {
 
         int longerListLength = Math.max(list1.size(), list2.size());
 
+        timer2.start("Comparing lists");
+
+
         // Compare the elements in the lists and add the different elements to the HashMap
         for (int i = 0; i < longerListLength; i++) {
             if (i < list1.size() && i < list2.size()) {
@@ -77,19 +105,22 @@ public class FileUtil {
                     differentBytes.put(i, list2.get(i));
                 }
             }
-            if (i >= list1.size()) {
+            if (i > list1.size()) {
                 differentBytes.put(i, list2.get(i));
             }
-            if (i >= list2.size()) {
+            if (i > list2.size()) {
                 differentBytes.put(i, list1.get(i));
             }
         }
+        differentBytes.put(-1, list2.size());
+        timer2.stop();
 
-        differentBytes.put(-1, longerListLength);
+
 
         // Add the checksum of the list to the HashMap
+        timer2.start("Combining data");
         addIntListToMap(toIntList(MD5.getListMD5Checksum(list2)), differentBytes);
-
+        timer2.stop();
         return differentBytes;
     }
 
@@ -102,38 +133,37 @@ public class FileUtil {
                 bytes.add(byte1);
                 byte1 = bis.read();
             }
+            bis.close();
+            fis.close();
         } catch (IOException e) {
             System.out.println("Error reading file: " + e.getMessage());
         }
         return bytes;
     }
-    public static void applyPatchToList(List<Integer> list, Map<Integer, Integer> patchHashMap) {
+    public static boolean applyPatchToList(List<Integer> list, Map<Integer, Integer> patchHashMap) {
 
 
-        //get method name
+       //Probably not needed anymore
         int maxKey = patchHashMap.get(-1);
-        System.out.println("Max key: " + maxKey + " LargestList: " + patchHashMap.get(-1));
         if(list.size() > maxKey) {
             int difference = list.size() - maxKey;
             System.out.println(new Date().toString() + " Bytes to delete: " + difference);
-            for(int i = list.size() - 1; i > maxKey; i--) {
+            for(int i = list.size() - 1; i > maxKey - 1; i--) {
                 list.remove(i);
             }
         }
         if(list.size() < maxKey) {
-            //get difference between list size and max key
             int difference = maxKey - list.size();
             System.out.println(new Date().toString() + " Bytes to add: " + difference);
             for(int i = 0; i < difference; i++) {
-                list.add(0);
+                list.add(list.size(), 0);
             }
         }
-        // Iterate over the keys in the HashMap
+
         for (int key : patchHashMap.keySet()) {
-            // Get the value associated with the key (the new value to use)
             int value = patchHashMap.get(key);
 
-            if (key >= 0 && key < list.size()) {
+            if (key >= 0 && key < list.size() - 1) {
                 list.set(key, value);
             }
         }
@@ -145,11 +175,12 @@ public class FileUtil {
         String MD5Patch = getStringFromMap(patchHashMap);
 
         if(MD5Patched.equals(MD5Patch)) {
-            System.out.println("MD5 checksums match orignal file");
+            System.out.println("MD5 checksums match original file");
         } else {
             System.out.println("MD5 checksums do not match");
+            //return false;
         }
-        return;
+        return true;
 
 
     }
@@ -200,6 +231,8 @@ public class FileUtil {
             for (int i : list) {
                 bos.write(i);
             }
+            bos.close();
+            fos.close();
         } catch (IOException e) {
             System.out.println("Error writing list to file: " + e.getMessage());
         }
@@ -239,11 +272,75 @@ public class FileUtil {
         return sb.toString();
     }
 
+    public static void compressMap(Map<Integer, Integer> map, String outputFileName) {
+        try (
+                // Create the output stream
+                OutputStream outputStream = new FileOutputStream(outputFileName);
+
+                // Wrap the output stream in a buffered output stream
+                BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
+
+                // Create the compressor and the deflater output stream
+                DeflaterOutputStream deflaterOutputStream = new DeflaterOutputStream(bufferedOutputStream, new Deflater());
+
+                // Create the object output stream using the specified character encoding
+                ObjectOutputStream objectOutputStream = new ObjectOutputStream(deflaterOutputStream);
+        ) {
+
+            // Create a new map to store the data
+            Map<Integer, Integer> compressedMap = new HashMap<>();
+
+            // Add the data from the input map to the compressed map
+            compressedMap.putAll(map);
+
+            // Write the compressed map to the output stream
+            objectOutputStream.writeObject(compressedMap);
+            objectOutputStream.close();
+            deflaterOutputStream.close();
+            if(!decompressMap(outputFileName).equals(map)) {
+                System.out.println("Map compression failed");
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static Map<Integer, Integer> decompressMap(String inputFileName) {
+        Map<Integer, Integer> map = null;
+
+        try {
+            // Create the input stream
+            InputStream inputStream = new FileInputStream(inputFileName);
+
+            // Wrap the input stream in a buffered input stream
+            BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+
+            // Create the decompressor and the inflater
+            Inflater decompressor = new Inflater();
+            InflaterInputStream inflaterInputStream = new InflaterInputStream(bufferedInputStream, decompressor);
+
+            // Read the map from the input stream
+            ObjectInputStream objectInputStream = new ObjectInputStream(inflaterInputStream);
+            map = (Map<Integer, Integer>) objectInputStream.readObject();
 
 
+            // Close the streams
+            objectInputStream.close();
+            inflaterInputStream.close();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
 
+        return map;
+    }
 
+    public static boolean deleteFile(String filePath) {
+        // Create a File object for the specified file
+        File file = new File(filePath);
 
-
+        // Delete the file and return the result
+        return file.delete();
+    }
 
 }
