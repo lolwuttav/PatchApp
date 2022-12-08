@@ -4,6 +4,7 @@ import java.io.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import util.LogUtil;
 
 public class FileUtil {
 
@@ -54,37 +55,6 @@ public class FileUtil {
         }
     }
 
-    public static String generateChecksum(String filePath) {
-        try {
-            FileInputStream fis = new FileInputStream(filePath);
-
-            // Create a MessageDigest to generate the checksum
-            MessageDigest md = MessageDigest.getInstance("MD5");
-
-
-            int b = fis.read();
-            while (b != -1) {
-                md.update((byte) b);
-                b = fis.read();
-            }
-
-            fis.close();
-
-            // Get the checksum as string
-            StringBuilder sb = new StringBuilder();
-            for (byte b1 : md.digest()) {
-                sb.append(String.format("%02x", b1));
-            }
-
-            // Return the hexadecimal string
-            return sb.toString();
-        } catch (IOException | NoSuchAlgorithmException e) {
-            System.out.println("Error generating checksum: " + e.getMessage());
-            return null;
-        }
-    }
-
-
     public static Map<Integer, Integer> compareLists(List<Integer> list1, List<Integer> list2) {
         Map<Integer, Integer> differentBytes = new HashMap<>();
 
@@ -114,22 +84,20 @@ public class FileUtil {
         return differentBytes;
     }
 
-    //method to return a list of integers from a file
     public static List<Integer> readBytesFromFile(String fileName) {
         List<Integer> bytes = new ArrayList<>();
-        try {
-            FileInputStream fis = new FileInputStream(fileName);
-            int byte1 = fis.read();
+        try (FileInputStream fis = new FileInputStream(fileName);
+             BufferedInputStream bis = new BufferedInputStream(fis)) {
+            int byte1 = bis.read();
             while (byte1 != -1) {
                 bytes.add(byte1);
-                byte1 = fis.read();
+                byte1 = bis.read();
             }
         } catch (IOException e) {
             System.out.println("Error reading file: " + e.getMessage());
         }
         return bytes;
     }
-
     public static List<Integer> applyPatchToList(List<Integer> list, Map<Integer, Integer> patchHashMap) {
 
 
@@ -208,17 +176,14 @@ public class FileUtil {
 
 
     public static void writeListToFile(List<Integer> list, String filePath) {
-        try {
-            FileOutputStream fos = new FileOutputStream(filePath);
-
-            // Write each integer in the list to the FileOutputStream as a byte
+        try (FileOutputStream fos = new FileOutputStream(filePath);
+             BufferedOutputStream bos = new BufferedOutputStream(fos)) {
             for (int i : list) {
-                fos.write(i);
+                bos.write(i);
             }
-
-            fos.close();
         } catch (IOException e) {
             System.out.println("Error writing list to file: " + e.getMessage());
         }
     }
+
 }
