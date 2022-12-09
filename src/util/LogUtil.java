@@ -13,7 +13,7 @@ public class LogUtil {
 
 
        Date date = new Date();
-       SimpleDateFormat formatter = new SimpleDateFormat("[dd/MM/yyyy HH:mm:ss] ");
+       SimpleDateFormat formatter = new SimpleDateFormat("[HH:mm:ss] ");
          String strDate = formatter.format(date);
          return strDate;
     }

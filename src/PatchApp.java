@@ -1,8 +1,7 @@
 import util.FileUtil;
+import util.LogUtil;
 
-import java.io.*;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+
 import java.util.*;
 
 
@@ -11,30 +10,36 @@ public class PatchApp {
     private static Scanner modeScanner;
     private static Scanner file1Scanner;
     private static Scanner file2Scanner;
-    private static String FILE1 = "";
-    private static String FILE2 = "";
+    private static String FILE1 = " ";
+    private static String FILE2 = " ";
 
     private static boolean argsPresent = false;
 
     private static int mode = 0;
+
+
     public static void main(String[] args) {
 
 
 
 
 
-        if(args.length != 0){
-            argsPresent = true;
-            mode = Integer.parseInt(args[0]);
-            FILE1 = args[1];
-            FILE2 = args[2];
-        }
+
+
+
 
         while (true) {
 
+            FILE1 = " ";
+            FILE2 = " ";
             mode = 0;
-            FILE1 = "";
-            FILE2 = "";
+            if(args.length != 0){
+                argsPresent = true;
+                mode = Integer.parseInt(args[0]);
+                FILE1 = args[1];
+                FILE2 = args[2];
+                LogUtil.log("Mode: " + mode);
+            }
 
             modeScanner = new Scanner(System.in);
             file1Scanner = new Scanner(System.in);
@@ -50,11 +55,11 @@ public class PatchApp {
             }
 
             if(mode == 1) {
-                if (FILE1.equals("")) {
+                if (FILE1.equals(" ")) {
                     System.out.print("Enter the first file: ");
                     FILE1 = file1Scanner.nextLine();
                 }
-                if (FILE2.equals("")) {
+                if (FILE2.equals(" ")) {
                     System.out.print("Enter the second file: ");
                     FILE2 = file2Scanner.nextLine();
                 }
@@ -88,17 +93,8 @@ public class PatchApp {
                 break;
             }
 
-
         }
 
-
-
-        }
-
-
-
-
-
-
+    }
 
 }
