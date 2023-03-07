@@ -32,7 +32,7 @@ public class FileUtil {
 
         try {
             timer.start("Applying patch to data");
-            if(!applyPatchToList(file, patch)){
+            if (!applyPatchToList(file, patch)) {
                 System.out.println("Error applying patch, aborting");
                 return;
             }
@@ -45,10 +45,19 @@ public class FileUtil {
 
         String[] parts = file1.split("\\.");
         String part1 = parts[0];
-        String part2 = parts[1];
-        timer.start("Writing patched file");
-        writeListToFile(file, part1 + "-patched" + "." + part2);
-        timer.stop();
+        if (parts.length > 1)
+        {
+            String part2 = parts[1];
+            timer.start("Writing patched file");
+            writeListToFile(file, part1 + "-patched" + "." + part2);
+            timer.stop();
+        }
+        else
+        {
+            timer.start("Writing patched file");
+            writeListToFile(file, part1 + "-patched");
+            timer.stop();
+        }
     }
 
 
@@ -64,7 +73,7 @@ public class FileUtil {
             timer.stop();
 
             // Get the MD5 checksums
-            if(MD51.equals(MD52)) {
+            if(MD51 == MD52) {
                 System.out.println("The files are the same, no patch will be generated.");
                 return;
             }
@@ -103,7 +112,7 @@ public class FileUtil {
         // Compare the elements in the lists and add the different elements to the HashMap
         for (int i = 0; i < longerListLength; i++) {
             if (i < list1.size() && i < list2.size()) {
-                if (!list1.get(i).equals(list2.get(i))) {
+                if (!(list1.get(i) == list2.get(i))) {
                     differentBytes.put(i, list2.get(i));
                 }
             }
@@ -176,7 +185,7 @@ public class FileUtil {
         String MD5Patched = MD5.getListMD5Checksum(list);
         String MD5Patch = getStringFromMap(patchHashMap);
 
-        if(MD5Patched.equals(MD5Patch)) {
+        if(MD5Patched == MD5Patch) {
             System.out.println("MD5 checksums match original file");
         } else {
             System.out.println("MD5 checksums do not match");
@@ -299,7 +308,7 @@ public class FileUtil {
             objectOutputStream.writeObject(compressedMap);
             objectOutputStream.close();
             deflaterOutputStream.close();
-            if(!decompressMap(outputFileName).equals(map)) {
+            if(decompressMap(outputFileName) != map) {
                 System.out.println("Map compression failed");
             }
 

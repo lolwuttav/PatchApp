@@ -23,11 +23,6 @@ public class PatchApp {
 
 
 
-
-
-
-
-
         while (true) {
 
             FILE1 = " ";
@@ -55,11 +50,11 @@ public class PatchApp {
             }
 
             if(mode == 1) {
-                if (FILE1.equals(" ")) {
+                if (FILE1 == " ") {
                     System.out.print("Enter the first file: ");
                     FILE1 = file1Scanner.nextLine();
                 }
-                if (FILE2.equals(" ")) {
+                if (FILE2 == " ") {
                     System.out.print("Enter the second file: ");
                     FILE2 = file2Scanner.nextLine();
                 }
@@ -71,7 +66,7 @@ public class PatchApp {
 
 
             else if(mode == 2) {
-                if(FILE1.equals("")) {
+                if(FILE1 == " ") {
                     System.out.print("Enter the first file: ");
                     FILE1 = file1Scanner.nextLine();
                 }

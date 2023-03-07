@@ -23,6 +23,7 @@ public class MD5 {
             } while (numRead != -1);
 
             fis.close();
+            System.out.println("MD5: " + bytesToHex(md.digest()) + " " + filePath);
             return bytesToHex(md.digest());
         } catch (IOException | NoSuchAlgorithmException e) {
             return "";
@@ -34,6 +35,7 @@ public class MD5 {
             for (int i : ints) {
                 md.update((byte) i);
             }
+            System.out.println("MD5: " + bytesToHex(md.digest()));
             return bytesToHex(md.digest());
         } catch (NoSuchAlgorithmException e) {
             return "";
