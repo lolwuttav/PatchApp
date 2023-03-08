@@ -62,10 +62,9 @@ public class FileUtil {
 
 
     public static void generatePatchFile(String file1, String file2) {
-        try {
+
             // Open the files
-            FileInputStream fis1 = new FileInputStream(file1);
-            FileInputStream fis2 = new FileInputStream(file2);
+
 
             timer.start("Getting MD5 of files");
             MD51 = MD5.getFileMD5Checksum(file1);
@@ -87,6 +86,8 @@ public class FileUtil {
 
             timer.start("Generating patch");
             Map<Integer, Integer> differentBytes = compareLists(bytes1, bytes2);
+            bytes1.clear();
+            bytes2.clear();
             timer.stop();
             //Save the different bytes map to a file
             //writeMapToFile(differentBytes, file1 + PATCH_FILE_EXTENSION);
@@ -96,9 +97,7 @@ public class FileUtil {
             compressMap(differentBytes, file1 + PATCH_FILE_EXTENSION);
             timer.stop();
 
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+
     }
 
     public static Map<Integer, Integer> compareLists(List<Integer> list1, List<Integer> list2) {
@@ -185,7 +184,7 @@ public class FileUtil {
         String MD5Patched = MD5.getListMD5Checksum(list);
         String MD5Patch = getStringFromMap(patchHashMap);
 
-        if(MD5Patched == MD5Patch) {
+        if(MD5Patched.equals(MD5Patch)) {
             System.out.println("MD5 checksums match original file");
         } else {
             System.out.println("MD5 checksums do not match");
@@ -301,14 +300,17 @@ public class FileUtil {
             // Create a new map to store the data
             Map<Integer, Integer> compressedMap = new HashMap<>();
 
+            //Print size of map in megabytes
+            System.out.println("Size of map: " + map.size() * 4 / 1024 / 1024 + " MB");
+
             // Add the data from the input map to the compressed map
-            compressedMap.putAll(map);
+            //compressedMap.putAll(map);
 
             // Write the compressed map to the output stream
-            objectOutputStream.writeObject(compressedMap);
+            objectOutputStream.writeObject(map);
             objectOutputStream.close();
             deflaterOutputStream.close();
-            if(decompressMap(outputFileName) != map) {
+            if(!decompressMap(outputFileName).equals(map)) {
                 System.out.println("Map compression failed");
             }
 

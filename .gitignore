@@ -29,3 +29,11 @@
 hs_err_pid*
 *.sav
 output.txt
+/1
+/1.ubp
+/2
+/2.ubp
+*.jpg
+*.jpeg
+*.png
+*.gif
