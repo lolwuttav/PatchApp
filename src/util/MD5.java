@@ -1,7 +1,7 @@
 package util;
+
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -9,40 +9,38 @@ import java.util.List;
 public class MD5 {
 
     public static String getFileMD5Checksum(String filePath) {
-        byte[] buffer = new byte[1024];
+        byte[] buffer = new byte[4096];
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
-            FileInputStream fis = new FileInputStream(filePath);
-
-            int numRead;
-            do {
-                numRead = fis.read(buffer);
-                if (numRead > 0) {
+            try (FileInputStream fis = new FileInputStream(filePath)) {
+                int numRead;
+                while ((numRead = fis.read(buffer)) != -1) {
                     md.update(buffer, 0, numRead);
                 }
-            } while (numRead != -1);
+            }
 
-            fis.close();
-            System.out.println("MD5: " + bytesToHex(md.digest()) + " " + filePath);
-            return bytesToHex(md.digest());
+            String checksum = bytesToHex(md.digest());
+            System.out.println("MD5: " + checksum + " " + filePath);
+            return checksum;
         } catch (IOException | NoSuchAlgorithmException e) {
             return "";
         }
     }
+
     public static String getListMD5Checksum(List<Integer> ints) {
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
-            for (int i : ints) {
-                md.update((byte) i);
+            for (int value : ints) {
+                md.update((byte) value);
             }
-            System.out.println("MD5: " + bytesToHex(md.digest()));
-            return bytesToHex(md.digest());
+
+            String checksum = bytesToHex(md.digest());
+            System.out.println("MD5: " + checksum);
+            return checksum;
         } catch (NoSuchAlgorithmException e) {
             return "";
         }
     }
-
-
 
     public static String bytesToHex(byte[] bytes) {
         StringBuilder sb = new StringBuilder();
